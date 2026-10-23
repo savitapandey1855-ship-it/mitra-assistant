@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Mitra — Mera Assistant</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { height:100%; }
+  body {
+    font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: linear-gradient(160deg, #10163a 0%, #1b2350 45%, #2a1f5c 100%);
+    color:#eef2ff; display:flex; flex-direction:column; height:100vh;
+    height:100dvh; overflow:hidden;
+  }
+
+  header {
+    display:flex; align-items:center; gap:12px;
+    padding:14px 16px; background:rgba(255,255,255,0.05);
+    border-bottom:1px solid rgba(255,255,255,0.08);
+  }
+  .avatar {
+    width:44px; height:44px; border-radius:50%;
+    background: radial-gradient(circle at 30% 30%, #6ee7ff, #4f7cff 60%, #7c3aed);
+    display:flex; align-items:center; justify-content:center;
+    font-size:22px; box-shadow:0 0 16px rgba(110,231,255,0.5);
+  }
+  .title { flex:1; }
+  .title h1 { font-size:17px; font-weight:700; letter-spacing:.3px; }
+  .title p { font-size:12px; color:#9fb0e0; margin-top:1px; }
+  .icon-btn {
+    width:38px; height:38px; border-radius:12px; border:none;
+    background:rgba(255,255,255,0.08); color:#cdd8ff; font-size:18px;
+    display:flex; align-items:center; justify-content:center; cursor:pointer;
+  }
+  .icon-btn:active { background:rgba(255,255,255,0.18); }
+
+  #chat {
+    flex:1; overflow-y:auto; padding:16px; display:flex;
+    flex-direction:column; gap:12px; scroll-behavior:smooth;
+  }
+  .msg { max-width:82%; padding:11px 14px; border-radius:16px;
+    font-size:15px; line-height:1.45; word-wrap:break-word; }
+  .msg.user { align-self:flex-end; background:#4f7cff;
+    border-bottom-right-radius:4px; color:#fff; }
+  .msg.bot { align-self:flex-start; background:rgba(255,255,255,0.10);
+    border-bottom-left-radius:4px; }
+  .msg.sys { align-self:center; background:transparent; color:#8fa0d0;
+    font-size:12.5px; max-width:90%; text-align:center; }
+
+  .chips { display:flex; gap:8px; overflow-x:auto; padding:0 16px 10px;
+    scrollbar-width:none; }
+  .chips::-webkit-scrollbar { display:none; }
+  .chip { flex:0 0 auto; padding:7px 13px; border-radius:20px;
+    background:rgba(255,255,255,0.08); color:#c6d2ff; font-size:12.5px;
+    border:1px solid rgba(255,255,255,0.10); cursor:pointer; white-space:nowrap; }
+  .chip:active { background:rgba(255,255,255,0.2); }
+
+  .composer { padding:10px 16px 18px; display:flex; align-items:center; gap:10px;
+    background:rgba(0,0,0,0.15); border-top:1px solid rgba(255,255,255,0.08); }
+  #textIn {
+    flex:1; height:46px; border-radius:23px; border:1px solid rgba(255,255,255,0.14);
+    background:rgba(255,255,255,0.07); color:#fff; padding:0 18px; font-size:15px;
+    outline:none;
+  }
+  #textIn::placeholder { color:#8fa0d0; }
+  .send {
+    width:46px; height:46px; border-radius:50%; border:none; flex:0 0 auto;
+    background:#4f7cff; color:#fff; font-size:18px; cursor:pointer;
+  }
+  #mic {
+    width:64px; height:64px; border-radius:50%; border:none; flex:0 0 auto;
+    background:radial-gradient(circle at 35% 30%, #6ee7ff, #4f7cff 65%, #7c3aed);
+    color:#fff; font-size:26px; cursor:pointer;
+    box-shadow:0 6px 20px rgba(79,124,255,0.55);
+    transition:transform .12s, box-shadow .2s;
+  }
+  #mic:active { transform:scale(0.94); }
+  #mic.listening {
+    animation:pulse 1.1s infinite;
+    box-shadow:0 0 0 0 rgba(110,231,255,0.7);
+  }
+  @keyframes pulse {
+    0%   { box-shadow:0 0 0 0 rgba(110,231,255,0.65); }
+    70%  { box-shadow:0 0 0 22px rgba(110,231,255,0); }
+    100% { box-shadow:0 0 0 0 rgba(110,231,255,0); }
+  }
+
+  .modal {
+    position:fixed; inset:0; background:rgba(6,9,24,0.82);
+    display:none; align-items:center; justify-content:center; padding:20px; z-index:50;
+  }
+  .modal.open { display:flex; }
+  .sheet {
+    width:100%; max-width:440px; max-height:85vh; overflow-y:auto;
+    background:#171f45; border:1px solid rgba(255,255,255,0.12);
+    border-radius:20px; padding:20px;
+  }
+  .sheet h2 { font-size:17px; margin-bottom:12px; }
+  .sheet label { display:block; font-size:13px; color:#9fb0e0; margin:14px 0 6px; }
+  .sheet input, .sheet select {
+    width:100%; height:44px; border-radius:12px; border:1px solid rgba(255,255,255,0.16);
+    background:rgba(255,255,255,0.06); color:#fff; padding:0 14px; font-size:14px; outline:none;
+  }
+  .sheet button.primary {
+    width:100%; height:46px; margin-top:18px; border:none; border-radius:12px;
+    background:#4f7cff; color:#fff; font-size:15px; font-weight:600; cursor:pointer;
+  }
+  .sheet .hint { font-size:12.5px; color:#8fa0d0; line-height:1.6; margin-top:8px; }
+  .sheet a { color:#6ee7ff; }
+  .row { display:flex; gap:10px; }
+  .row > * { flex:1; }
+  .close { margin-top:12px; background:transparent; border:none; color:#8fa0d0;
+    font-size:13px; width:100%; cursor:pointer; padding:8px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="avatar">🤖</div>
+  <div class="title">
+    <h1 id="nameH">Mitra</h1>
+    <p id="statusH">Tap the mic and speak</p>
+  </div>
+  <button class="icon-btn" id="helpBtn" title="Help">?</button>
+  <button class="icon-btn" id="setBtn" title="Settings">⚙</button>
+</header>
+
+<div id="chat"></div>
+
+<div class="chips" id="chips">
+  <div class="chip">What is the time?</div>
+  <div class="chip">Aaj ki tareekh</div>
+  <div class="chip">Open YouTube</div>
+  <div class="chip">Search solar system</div>
+  <div class="chip">Tell me a joke</div>
+  <div class="chip">Explain photosynthesis</div>
+</div>
+
+<div class="composer">
+  <button id="mic" title="Bolne ke liye tap karo">🎤</button>
+  <input id="textIn" type="text" placeholder="Ya yahan type karo..." autocomplete="off" />
+  <button class="send" id="sendBtn">➤</button>
+</div>
+
+<!-- SETTINGS -->
+<div class="modal" id="setModal">
+  <div class="sheet">
+    <h2>⚙ Settings</h2>
+    <label>Assistant ka naam</label>
+    <input id="setName" type="text" placeholder="Mitra" />
+    <label>Bhasha (Language)</label>
+    <select id="setLang">
+      <option value="en-IN">English (India)</option>
+      <option value="hi-IN">हिन्दी (Hindi)</option>
+    </select>
+    <label>Gemini API key (optional — AI ke liye)</label>
+    <input id="setKey" type="password" placeholder="AIza..." />
+    <div class="hint">
+      Free key: <a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com/app/apikey</a>
+      — Google se login karke "Create API key". Bina key ke bhi time/date/open/search chalenge.
+      Key sirf aapke phone me save hoti hai.
+    </div>
+    <label style="display:flex;align-items:center;gap:10px;margin-top:16px;">
+      <input type="checkbox" id="setVoice" style="width:auto;height:auto;" /> Jawab bol kar sunao
+    </label>
+    <button class="primary" id="saveBtn">Save</button>
+    <button class="close" id="closeSet">Band karo</button>
+  </div>
+</div>
+
+<!-- HELP -->
+<div class="modal" id="helpModal">
+  <div class="sheet">
+    <h2>Kaise use karein?</h2>
+    <div class="hint" style="font-size:14px;">
+      <b>1.</b> Bade <b>🎤</b> button pe tap karo aur bolo. Pehli baar
+      browser permission maangega — <b>"Allow"</b> dabao.<br><br>
+      <b>2.</b> Mic na chale to neeche box me <b>type</b> karke ➤ dabao.<br><br>
+      <b>3.</b> Smart sawaal-jawab ke liye ⚙ Settings me apni free
+      <b>Gemini API key</b> daalo.<br><br>
+      <b>4.</b> Upar wale chips pe tap karke turant try karo.<br><br>
+      <b>Tip:</b> Chrome browser best chalta hai. Internet on rakho
+      (mic aur AI ke liye zaroori hai).
+    </div>
+    <button class="primary" id="closeHelp">Samajh gaya</button>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   MITRA — phone voice assistant
+   Phone ke browser (Chrome) me chalta hai. Kuch install nahi.
+   ============================================================ */
+
+var store = window.localStorage;
+var settings = {
+  name:  store.getItem("mitra_name")  || "Mitra",
+  lang:  store.getItem("mitra_lang")  || "en-IN",
+  key:   store.getItem("mitra_key")   || "",
+  voice: store.getItem("mitra_voice") !== "0"
+};
+
+var chat = document.getElementById("chat");
+var micBtn = document.getElementById("mic");
+var textIn = document.getElementById("textIn");
+var statusH = document.getElementById("statusH");
+
+function addMsg(role, text) {
+  var d = document.createElement("div");
+  d.className = "msg " + role;
+  d.textContent = text;
+  chat.appendChild(d);
+  chat.scrollTop = chat.scrollHeight;
+  return d;
+}
+
+/* ---------- Bolna (text-to-speech) ---------- */
+function speak(text) {
+  addMsg("bot", text);
+  if (!settings.voice || !window.speechSynthesis) return;
+  try {
+    window.speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(text);
+    u.lang = settings.lang;
+    u.rate = 1;
+    window.speechSynthesis.speak(u);
+  } catch (e) {}
+}
+
+/* ---------- Awaaz sunna (speech-to-text) ---------- */
+var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+var recog = null;
+var listening = false;
+
+if (SR) {
+  recog = new SR();
+  recog.continuous = false;
+  recog.interimResults = false;
+  recog.maxAlternatives = 1;
+  recog.onresult = function (e) {
+    var t = e.results[0][0].transcript;
+    handleUser(t);
+  };
+  recog.onerror = function (e) {
+    setListening(false);
+    if (e.error === "not-allowed") {
+      addMsg("sys", "Mic permission nahi mila. Browser settings me Allow karo.");
+    } else if (e.error === "no-speech") {
+      addMsg("sys", "Kuch sunai nahi diya, phir se try karo.");
+    } else {
+      addMsg("sys", "Mic me dikkat (" + e.error + "). Type karke bhej sakte ho.");
+    }
+  };
+  recog.onend = function () { setListening(false); };
+}
+
+function setListening(on) {
+  listening = on;
+  if (on) {
+    micBtn.classList.add("listening");
+    statusH.textContent = "Sun raha hoon...";
+  } else {
+    micBtn.classList.remove("listening");
+    statusH.textContent = "Tap the mic and speak";
+  }
+}
+
+function startListen() {
+  if (!recog) {
+    addMsg("sys", "Is browser me mic support nahi hai. Chrome use karo, ya type karke bhejo.");
+    return;
+  }
+  if (listening) { recog.stop(); return; }
+  try {
+    recog.lang = settings.lang;
+    recog.start();
+    setListening(true);
+  } catch (e) {
+    setListening(false);
+  }
+}
+
+/* ---------- Commands (bina AI, turant) ---------- */
+function handleCommand(text) {
+  var t = text.toLowerCase().trim();
+
+  if (/(\btime\b|samay|kitne baje|kya time)/.test(t)) {
+    var now = new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
+    speak("Abhi " + now + " baje hain.");
+    return true;
+  }
+  if (/(\bdate\b|tareekh|aaj kaun|aaj kya din)/.test(t)) {
+    var d = new Date().toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
+    speak("Aaj " + d + " hai.");
+    return true;
+  }
+  if (/(your name|tumhara naam|tera naam|tum kaun|who are you)/.test(t)) {
+    speak("Main " + settings.name + " hoon, aapka assistant.");
+    return true;
+  }
+  if (/(joke|chutkula|hasao|funny)/.test(t)) {
+    var jokes = [
+      "Teacher: Tumne homework kyun nahi kiya? Student: Sir, homework to tha, par WiFi nahi tha!",
+      "Ek computer doctor ke paas gaya. Doctor: Kya problem hai? Computer: Mere windows band nahi ho rahe!",
+      "Mummy: Padhai kar lo. Beta: Mummy, main AI se padhai kar raha hoon. Mummy: Toh AI ko exam me bhej do!"
+    ];
+    speak(jokes[Math.floor(Math.random() * jokes.length)]);
+    return true;
+  }
+
+  var sites = [
+    { re: /youtube/, name: "YouTube", url: "https://www.youtube.com" },
+    { re: /google/,  name: "Google",  url: "https://www.google.com" },
+    { re: /chatgpt/, name: "ChatGPT", url: "https://chatgpt.com" },
+    { re: /gmail|mail/, name: "Gmail", url: "https://mail.google.com" },
+    { re: /whatsapp/, name: "WhatsApp", url: "https://web.whatsapp.com" },
+    { re: /instagram/, name: "Instagram", url: "https://www.instagram.com" }
+  ];
+  if (/\b(open|kholo|khol|chala do|launch)\b/.test(t)) {
+    for (var i = 0; i < sites.length; i++) {
+      if (sites[i].re.test(t)) {
+        window.open(sites[i].url, "_blank");
+        speak(sites[i].name + " khol raha hoon.");
+        return true;
+      }
+    }
+  }
+
+  var ms = t.match(/(?:search|dhundo|google karo|khojo)\s+(.+)/);
+  if (ms) {
+    var q = ms[1].replace(/\s+/g, "+");
+    window.open("https://www.google.com/search?q=" + q, "_blank");
+    speak("Google pe " + ms[1] + " search kar raha hoon.");
+    return true;
+  }
+
+  var my = t.match(/(?:youtube pe|youtube par|play|gaana|song)\s+(.+)/);
+  if (my && /youtube|play|gaana|song/.test(t)) {
+    var q2 = my[1].replace(/\s+/g, "+");
+    window.open("https://www.youtube.com/results?search_query=" + q2, "_blank");
+    speak("YouTube pe dhoondh raha hoon.");
+    return true;
+  }
+
+  if (/\b(bye|goodbye|exit|band karo|so jao|alvida)\b/.test(t)) {
+    speak("Theek hai, main chalta hoon. Phir milenge!");
+    return true;
+  }
+
+  return false;
+}
+
+/* ---------- AI (Gemini) ---------- */
+function askAI(prompt) {
+  if (!settings.key) return Promise.resolve(null);
+  var url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=" + encodeURIComponent(settings.key);
+  var body = {
+    contents: [{ parts: [{ text: prompt }] }],
+    systemInstruction: {
+      parts: [{ text: "You are " + settings.name + ", a friendly helpful voice assistant for a school student in India. Reply in short simple sentences (under 3 sentences unless asked more). If the user speaks Hindi or Hinglish, reply in the same style." }]
+    }
+  };
+  return fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body)
+  }).then(function (r) { return r.json(); })
+    .then(function (data) {
+      try { return data.candidates[0].content.parts[0].text.trim(); }
+      catch (e) { return null; }
+    })
+    .catch(function () { return null; });
+}
+
+/* ---------- Main flow ---------- */
+function handleUser(text) {
+  if (!text || !text.trim()) return;
+  addMsg("user", text);
+
+  if (handleCommand(text)) return;
+
+  var thinking = addMsg("bot", "...");
+  askAI(text).then(function (answer) {
+    thinking.remove();
+    if (answer) {
+      speak(answer);
+    } else {
+      if (!settings.key) {
+        speak("Is sawaal ka jawab dene ke liye Settings me apni free Gemini API key daalo. Tab main kuch bhi bata paunga.");
+      } else {
+        speak("Sorry, abhi jawab nahi mil paya. Internet ya key check karo.");
+      }
+    }
+  });
+}
+
+/* ---------- Events ---------- */
+micBtn.addEventListener("click", startListen);
+document.getElementById("sendBtn").addEventListener("click", function () {
+  var v = textIn.value;
+  textIn.value = "";
+  handleUser(v);
+});
+textIn.addEventListener("keydown", function (e) {
+  if (e.key === "Enter") {
+    var v = textIn.value;
+    textIn.value = "";
+    handleUser(v);
+  }
+});
+document.querySelectorAll(".chip").forEach(function (c) {
+  c.addEventListener("click", function () { handleUser(c.textContent); });
+});
+
+/* ---------- Settings ---------- */
+var setModal = document.getElementById("setModal");
+var helpModal = document.getElementById("helpModal");
+document.getElementById("setBtn").onclick = function () {
+  document.getElementById("setName").value = settings.name;
+  document.getElementById("setLang").value = settings.lang;
+  document.getElementById("setKey").value = settings.key;
+  document.getElementById("setVoice").checked = settings.voice;
+  setModal.classList.add("open");
+};
+document.getElementById("closeSet").onclick = function () { setModal.classList.remove("open"); };
+document.getElementById("helpBtn").onclick = function () { helpModal.classList.add("open"); };
+document.getElementById("closeHelp").onclick = function () { helpModal.classList.remove("open"); };
+document.getElementById("saveBtn").onclick = function () {
+  settings.name = document.getElementById("setName").value.trim() || "Mitra";
+  settings.lang = document.getElementById("setLang").value;
+  settings.key = document.getElementById("setKey").value.trim();
+  settings.voice = document.getElementById("setVoice").checked;
+  store.setItem("mitra_name", settings.name);
+  store.setItem("mitra_lang", settings.lang);
+  store.setItem("mitra_key", settings.key);
+  store.setItem("mitra_voice", settings.voice ? "1" : "0");
+  document.getElementById("nameH").textContent = settings.name;
+  setModal.classList.remove("open");
+  speak("Settings save ho gayi.");
+};
+
+/* ---------- Start ---------- */
+document.getElementById("nameH").textContent = settings.name;
+addMsg("bot", "Namaste! Main " + settings.name + " hoon. Mic pe tap karke bolo, ya type karo. Kuch bhi poochho!");
+</script>
+</body>
+</html>
