@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mitra Float — Guide</title><style>
+:root{--bg:#0f1533;--card:#171f45;--accent:#6ee7ff;--blue:#4f7cff;--txt:#eef2ff;--mut:#9fb0e0;}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,"Segoe UI",Roboto,sans-serif;background:linear-gradient(160deg,#10163a,#1b2350 45%,#2a1f5c);color:var(--txt);line-height:1.65;padding:22px 18px 60px;max-width:820px;margin:0 auto;}
+h1{font-size:26px;background:linear-gradient(90deg,#6ee7ff,#4f7cff,#a78bfa);-webkit-background-clip:text;background-clip:text;color:transparent;margin:6px 0 14px;}
+h2{font-size:19px;color:var(--accent);margin:30px 0 8px;border-left:4px solid var(--blue);padding-left:12px;}
+p{margin:10px 0;color:#dbe4ff;}
+ul{margin:8px 0 14px;padding-left:22px;}
+li{margin:6px 0;}
+pre{background:#0b1130;border:1px solid #2b3768;border-radius:12px;padding:14px;overflow-x:auto;font-size:13.5px;color:#bfe9ff;white-space:pre-wrap;word-break:break-word;}
+.note{background:rgba(255,196,84,0.12);border:1px solid #e0b84c;border-radius:12px;padding:12px 14px;margin:14px 0;font-size:14.5px;color:#ffe9b8;}
+a{color:var(--accent);}
+</style></head>
+<body>
+<h1>Mitra Float — Android pe floating assistant</h1>
+<p>Ye guide aapko ek aisa chhota assistant banane me madad karega jo screen ke upar float karta hai, aapki awaaz sunta hai, jahan kaho wahan click/type karta hai, aur khud email bhi likh sakta hai.</p>
+<div class="note">Sach baat pehle: ye us video wale &#x27;Bluey&#x27; ka sabse advanced hissa hai — screen control + automation + AI. Ye ek raat me nahi banega. Hum ise 4 Levels me banayenge. Har level ke baad kuch na kuch kaam karne lagega. Aaram se, ek-ek karke.</div>
+<h2>Kaunse app se banayenge?</h2>
+<p>Hum &#x27;Automate&#x27; (LlamaLab) naam ka free app use karenge. Isme pehle se hi sab kuch hai — floating button, awaaz sunna, bolna, tap/type karna, email bhejna, aur internet se AI (Gemini) — aur code likhne ki zaroorat nahi. Sab kuch boxes (blocks) jodkar banta hai.</p>
+<h2>Level 0 — Taiyari (permissions)</h2>
+<ul>
+<li>Play Store se &#x27;Automate&#x27; (LlamaLab) install karo.</li>
+<li>Jab app maange, &#x27;Display over other apps&#x27; permission do — ye float karne ke liye zaroori hai.</li>
+<li>Accessibility permission bhi do (Automate ke andar Settings me jaake &#x27;Automate accessibility service&#x27; ON karo) — ye &#x27;kahin bhi tap/type&#x27; karne ke liye chahiye.</li>
+<li>Microphone aur Internet permission do.</li>
+<li>Ek free Gemini API key banao: aistudio.google.com/app/apikey — Google se login karke &#x27;Create API key&#x27;. Ye Level 4 (email/AI) ke liye chahiye.</li>
+</ul>
+<div class="note">API key aapki personal chaabi hai — kisi ko na do, kisi website pe public na karo. Wo sirf aapke phone me Automate ke andar rahegi.</div>
+<h2>Level 1 — Floating button jo sunta hai</h2>
+<p>Sabse pehle ek button jo screen pe tairta rahe, aur dabane pe aapki baat sune. Naya flow banao aur ye blocks jodo:</p>
+<pre>Flow beginning  &gt;  Floating button show  &gt;  Speech recognition  &gt;  Speak  &gt;  Go to (wapas &#x27;Floating button show&#x27; pe)</pre>
+<ul>
+<li>Floating button show: koi icon aur rang chuno. Ye button screen pe dikhega.</li>
+<li>Speech recognition: Language &#x27;English (India)&#x27; ya &#x27;Hindi&#x27; chuno. Jo sunega wo ek variable me aayega (maan lo &#x27;spoken&#x27;).</li>
+<li>Speak: text me likho — Tumne kaha: {spoken}  — taaki assistant bol kar bata de ki usne kya suna.</li>
+<li>Go to: wapas &#x27;Floating button show&#x27; pe le jao, taaki button phir se dikhe (loop).</li>
+</ul>
+<p>Save karke Start dabao. Ab screen pe chhota button aayega — tap karo, bolo, aur Mitra aapki baat dohraayega. Ye Level 1 hai, mubarak ho!</p>
+<h2>Level 2 — Jo bolu, wo kare</h2>
+<p>Ab &#x27;spoken&#x27; ke hisaab se kaam karvayenge. Iske liye &#x27;Expression true&#x27; ya &#x27;Dialog choice&#x27; block se check karo ki baat me kya hai, phir us hisaab se kaam karo:</p>
+<ul>
+<li>&#x27;open youtube&#x27; jaisi baat me -&gt; App start block (YouTube kholo).</li>
+<li>&#x27;type ...&#x27; me -&gt; Key send characters block (jo bolo wo type karo).</li>
+<li>&#x27;search ...&#x27; me -&gt; App start block se browser kholo (Google ka URL).</li>
+</ul>
+<p>Pehle 2-3 command banao aur test karo. Jab chal jaye, aise hi naye commands add karte jao — har naya command ek chhoti practice hai.</p>
+<h2>Level 3 — Jahan bolu, wahan click</h2>
+<p>Kahin bhi click karne ke liye &#x27;Interact touch&#x27; block use hota hai — usme X aur Y coordinates dete hain (screen ke percent me). Coordinates jaanne ke liye: phone ki Developer options me &#x27;Pointer location&#x27; ON karo, phir jahan touch karo wahan X,Y dikh jayega.</p>
+<p>Kisi button ko uske naam se click karna ho to &#x27;Interact&#x27; block use karo (XPath ke saath). Automate me &#x27;Record interaction&#x27; button hai jo apne aap XPath bana deta hai.</p>
+<div class="note">Kuch jagah automation kaam nahi karega — jaise banking apps, password ke boxes, ya protected video. Ye Android ka niyam hai, koi bug nahi.</div>
+<h2>Level 4 — AI email (khud likhe, kuch pooche)</h2>
+<p>Ye sabse mazedaar hissa hai. Flow aisa hoga:</p>
+<pre>Bolo &#x27;email bhejo&#x27;  &gt;  Dialog input: kisko bhejna hai?  &gt;  Dialog input: kya likhna hai / points batao  &gt;  HTTP request (Gemini)  &gt;  Dialog confirm: draft dikhao, &#x27;bhej doon?&#x27;  &gt;  Send email</pre>
+<ul>
+<li>HTTP request block: Method POST, URL Gemini ka endpoint, header Content-Type: application/json. Body me apna prompt bhejo jaise: Write a short polite email on these points: {points}</li>
+<li>Response me se email ka text nikaalo: candidates[0].content.parts[0].text (Automate me HTTP response ko dictionary me parse karke).</li>
+<li>Send email block: subject aur draft body daal ke bhejo.</li>
+</ul>
+<div class="note">Zaroori: email bhejne se PEHLE draft dikhao aur &#x27;bhej doon?&#x27; poocho (Dialog confirm). Bina poochhe kabhi auto-send mat karo — galti se galat email na chala jaye.</div>
+<h2>Ready-made flows se shuruaat</h2>
+<p>Automate ki community me log apne banaye flows share karte hain — llamalab.com/automate/community. Wahan &#x27;Voice Typing&#x27; jaisa flow mil jayega jise import karke aap turant voice-to-type kar sakte ho, aur usme apna kaam jodte ja sakte ho.</p>
+<h2>Yaad rakhne wali baatein</h2>
+<ul>
+<li>Ek-ek level. Level 1 theek se chale, tab Level 2 pe jao.</li>
+<li>API key kisi ko na do.</li>
+<li>Kahin atko — mujhe batao, main us step me help karunga. Saath milkar banayenge.</li>
+</ul>
+<p>Dheere-dheere aapka Mitra bhi us video wale assistant jaisa ban jayega. Shuru karo!</p>
+</body></html>
